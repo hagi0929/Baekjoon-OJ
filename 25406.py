@@ -1,5 +1,4 @@
 from collections import deque
-from queue import PriorityQueue
 
 n = int(input())
 foods = list(map(int, input().split()))
@@ -31,7 +30,6 @@ class HashQueue:
   def up_heapify(self, index):
     while index > 0:
       parent = (index - 1) // 2
-      print(self.heap[index])
       key, val = self.heap[index]
       pkey, pval = self.heap[parent]
       if (self.reversed and key > pkey) or (not self.reversed and key < pkey):
@@ -64,7 +62,6 @@ class HashQueue:
       if best == index:
         break
 
-      # swap
       self.heap[index], self.heap[best] = self.heap[best], self.heap[index]
       _, val = self.heap[index]
       _, best_val = self.heap[best]
@@ -103,15 +100,12 @@ class HashQueue:
     last_key, last_val = self.heap.pop()
     del self.value_index_hashmap[val]
 
-    # if we removed the last element, we're done
     if idx == len(self.heap):
       return (key, val)
 
-    # otherwise, fill the hole and re-heapify
     self.heap[idx] = (last_key, last_val)
     self.value_index_hashmap[last_val] = idx
 
-    # last element might need to go up or down
     self.up_heapify(idx)
     self.down_heapify(idx)
     return (key, val)
@@ -130,7 +124,7 @@ restaurant_count_queue = HashQueue(reversed=True)
 
 def popup_food(food):
   restaurant_deque = food_restaurant[food]
-  restaurant_number_queue.pop_by_value(food)
+  restaurant_num, _ = restaurant_number_queue.pop_by_value(food)
   next_min_restaurant = -1
   if len(restaurant_deque) > 0:
     next_min_restaurant = restaurant_deque.popleft()
@@ -139,7 +133,7 @@ def popup_food(food):
   restaurant_count = restaurant_count_queue.pop_by_value(food)
   restaurant_count_value = restaurant_count[0]
   restaurant_count_queue.insert(restaurant_count_value - 1, food)
-  return next_min_restaurant
+  return restaurant_num
 
 
 for food in food_restaurant:
@@ -152,30 +146,31 @@ for food in food_restaurant:
 counter = n
 last_food = -1
 seq = []
-print(restaurant_number_queue.heap)
-print(restaurant_count_queue.heap)
 for i in range(n):
   max_count_food = restaurant_count_queue.get_top()
   max_count_food_value = max_count_food[1]
   max_count_food_count = max_count_food[0]
-  if max_count_food_count > counter // 2 + 1:
+  if max_count_food_count * 2 == counter + 1:
     restaurant_num = popup_food(max_count_food_value)
     last_food = max_count_food_value
     seq.append(restaurant_num)
-    print(restaurant_num)
+    counter -= 1
+  elif max_count_food_count * 2 > counter + 1:
+    print(-1)
+    exit()
   else:
     next_restaurant = restaurant_number_queue.get_top()
     next_restaurant_num = next_restaurant[0]
     next_restaurant_food = next_restaurant[1]
     if next_restaurant_food == last_food:
       restaurant_number_queue.pop()
+      cur = next_restaurant
       next_restaurant = restaurant_number_queue.get_top()
       next_restaurant_num = next_restaurant[0]
       next_restaurant_food = next_restaurant[1]
-      restaurant_number_queue.insert(next_restaurant[0], next_restaurant[1])
-    print("next_min_restaurant", next_restaurant_food)
+      restaurant_number_queue.insert(cur[0], cur[1])
     popup_food(next_restaurant_food)
     last_food = next_restaurant_food
     seq.append(next_restaurant_num)
-    print(next_restaurant_num)
-print(seq)
+    counter -= 1
+print(' '.join(map(str, seq)))
